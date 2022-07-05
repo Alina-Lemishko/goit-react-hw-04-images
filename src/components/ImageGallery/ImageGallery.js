@@ -44,6 +44,11 @@ class ImageGallery extends Component {
             images: [...prevState.images, ...result.hits],
             status: 'resolved',
           }))
+        )
+        .catch(error =>
+          this.setState({
+            error: error.message,
+          })
         );
     }
 
@@ -80,6 +85,11 @@ class ImageGallery extends Component {
           image: result.hits,
           modalOpen: !prevState.modalOpen,
         }))
+      )
+      .catch(error =>
+        this.setState({
+          error: error.message,
+        })
       );
   };
 
