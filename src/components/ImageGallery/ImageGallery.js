@@ -26,11 +26,11 @@ class ImageGallery extends Component {
     status: 'idle',
   };
 
-  componentDidMount() {
-    Api.ImagesFetch('flo').then(result =>
-      this.setState({ images: result.hits })
-    );
-  }
+  // componentDidMount() {
+  //   // Api.ImagesFetch('flo').then(result =>
+  //   //   this.setState({ images: result.hits })
+  //   // );
+  // }
 
   componentDidUpdate(prevProps, prevState) {
     const { page } = this.state;
