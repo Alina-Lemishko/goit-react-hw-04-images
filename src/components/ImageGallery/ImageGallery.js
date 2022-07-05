@@ -20,6 +20,7 @@ class ImageGallery extends Component {
     page: 1,
     totalHits: null,
     url: '',
+    alt: '',
     modalOpen: false,
     error: null,
     status: 'idle',
@@ -77,8 +78,12 @@ class ImageGallery extends Component {
     return this.setState(prevState => ({ page: prevState.page + 1 }));
   };
 
-  onImageClick = url => {
-    this.setState(prevState => ({ url, modalOpen: !prevState.modalOpen }));
+  onImageClick = (url, tag) => {
+    this.setState(prevState => ({
+      url,
+      modalOpen: !prevState.modalOpen,
+      alt: tag,
+    }));
   };
 
   toggleModal = () => {
@@ -86,7 +91,7 @@ class ImageGallery extends Component {
   };
 
   render() {
-    const { status, error, images, modalOpen, totalHits, page, url } =
+    const { status, error, images, modalOpen, totalHits, page, url, alt } =
       this.state;
     const isNextPage = Math.ceil(totalHits / page);
 
@@ -96,7 +101,7 @@ class ImageGallery extends Component {
           <IdleItem images={images} onClick={this.onImageClick} />
           {modalOpen && (
             <Modal onClose={this.toggleModal}>
-              <img src={url} alt="img" />
+              <img src={url} alt={alt} />
             </Modal>
           )}
         </>
