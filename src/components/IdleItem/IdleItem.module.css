@@ -22,7 +22,7 @@
 
 .container {
   text-align: center;
-  margin-top: 0;
+  margin-top: 10px;
   text-decoration: overline;
   color: rgb(63, 63, 135);
 }

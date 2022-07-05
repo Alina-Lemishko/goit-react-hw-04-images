@@ -9,7 +9,7 @@ const ImageGalleryItem = ({ images, onImageClick }) => {
         <li
           key={image.id}
           className={s.ImageGalleryItem}
-          onClick={() => onImageClick(image.id)}
+          onClick={() => onImageClick(image.largeImageURL)}
         >
           {
             <img

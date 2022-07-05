@@ -19,8 +19,8 @@ class ImageGallery extends Component {
     images: [],
     page: 1,
     totalHits: null,
+    url: '',
     modalOpen: false,
-    image: [],
     error: null,
     status: 'idle',
   };
@@ -77,20 +77,8 @@ class ImageGallery extends Component {
     return this.setState(prevState => ({ page: prevState.page + 1 }));
   };
 
-  onImageClick = id => {
-    return fetch(`https://pixabay.com/api/?id=${id}&key=${API_KEY}`)
-      .then(response => response.json())
-      .then(result =>
-        this.setState(prevState => ({
-          image: result.hits,
-          modalOpen: !prevState.modalOpen,
-        }))
-      )
-      .catch(error =>
-        this.setState({
-          error: error.message,
-        })
-      );
+  onImageClick = url => {
+    this.setState(prevState => ({ url, modalOpen: !prevState.modalOpen }));
   };
 
   toggleModal = () => {
@@ -98,7 +86,7 @@ class ImageGallery extends Component {
   };
 
   render() {
-    const { status, error, images, image, modalOpen, totalHits, page } =
+    const { status, error, images, modalOpen, totalHits, page, url } =
       this.state;
     const isNextPage = Math.ceil(totalHits / page);
 
@@ -106,7 +94,11 @@ class ImageGallery extends Component {
       return (
         <>
           <IdleItem images={images} onClick={this.onImageClick} />
-          {modalOpen && <Modal images={image} onClose={this.toggleModal} />}
+          {modalOpen && (
+            <Modal onClose={this.toggleModal}>
+              <img src={url} alt="img" />
+            </Modal>
+          )}
         </>
       );
     }
@@ -125,7 +117,11 @@ class ImageGallery extends Component {
           {totalHits > 12 && isNextPage > 12 ? (
             <Button onClick={this.onHandleClick} />
           ) : null}
-          {modalOpen && <Modal images={image} onClose={this.toggleModal} />}
+          {modalOpen && (
+            <Modal onClose={this.toggleModal}>
+              <img src={url} alt="img" />
+            </Modal>
+          )}
         </>
       );
     }
