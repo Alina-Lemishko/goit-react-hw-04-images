@@ -26,40 +26,28 @@ export default function ImageGallery({ searchImg, page, setPage }) {
   const [status, setStatus] = useState(Status.IDLE);
 
   useEffect(() => {
-    if (page > 1) {
-      Api.ImagesFetch(searchImg, page)
-        .then(result => {
-          setImages(prev => [...prev, ...result.hits]);
-          setStatus(Status.RESOLVED);
-        })
-
-        .catch(error => {
-          setStatus(Status.REJECTED);
-          setError(error.message);
-        });
-    }
-  }, [page, searchImg]);
-
-  useEffect(() => {
-    if (!searchImg || page !== 1) {
+    if (!searchImg) {
       return;
     }
-    setStatus(Status.PENDING);
-    setPage(1);
 
-    if (page === 1) {
-      Api.ImagesFetch(searchImg, page)
-        .then(result => {
-          setImages(result.hits);
-          setTotalHits(result.total);
-          setStatus(Status.RESOLVED);
-        })
-        .catch(error => {
-          setStatus(Status.REJECTED);
-          setError(error.message);
-        });
-    }
-  }, [error, page, searchImg, setPage]);
+    Api.ImagesFetch(searchImg, page)
+      .then(result => {
+        setImages(prev =>
+          page > 1 ? [...prev, ...result.hits] : [...result.hits]
+        );
+        setTotalHits(result.total);
+        setStatus(Status.RESOLVED);
+      })
+
+      .catch(error => {
+        setStatus(Status.REJECTED);
+        setError(error.message);
+      })
+      .finally(() => {
+        if (page === 1) window.scrollTo(0, 0);
+      });
+    // }
+  }, [page, searchImg]);
 
   const onHandleClick = () => {
     return setPage(page + 1);
