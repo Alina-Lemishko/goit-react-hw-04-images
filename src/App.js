@@ -5,6 +5,7 @@ import ImageGallery from 'components/ImageGallery/ImageGallery';
 
 export default function App() {
   const [searchImg, setSearchImg] = useState('');
+  const [page, setPage] = useState(1);
 
   const handleSubmit = image => {
     setSearchImg(image);
@@ -12,8 +13,8 @@ export default function App() {
 
   return (
     <>
-      <Searchbar onSubmit={handleSubmit} />
-      <ImageGallery searchImg={searchImg} />
+      <Searchbar onSubmit={handleSubmit} setPage={setPage} />
+      <ImageGallery searchImg={searchImg} page={page} setPage={setPage} />
     </>
   );
 }

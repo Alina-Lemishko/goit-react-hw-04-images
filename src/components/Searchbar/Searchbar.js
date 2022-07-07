@@ -2,13 +2,14 @@ import { useState } from 'react';
 import { BsSearch } from 'react-icons/bs';
 import s from './Searchbar.module.css';
 
-export default function Searchbar({ onSubmit }) {
+export default function Searchbar({ onSubmit, setPage }) {
   const [searchValue, setSearchValue] = useState('');
 
   const handleSubmitForm = e => {
     e.preventDefault();
 
     onSubmit(searchValue);
+    setPage(1);
     setSearchValue('');
   };
 

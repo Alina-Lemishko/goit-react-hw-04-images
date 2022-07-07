@@ -3,7 +3,6 @@ import PropTypes from 'prop-types';
 import Button from 'components/Button/Button';
 import Modal from 'components/Modal/Modal';
 import Api from 'services/api';
-import { API_KEY } from 'services/api';
 import RejectedItem from 'components/RejectedItem/RejectedItem';
 import ResolvedItem from 'components/ResolvedItem/ResolvedItem';
 import IdleItem from 'components/IdleItem/IdleItem';
@@ -17,9 +16,8 @@ const Status = {
   REJECTED: 'rejected',
 };
 
-export default function ImageGallery({ searchImg }) {
+export default function ImageGallery({ searchImg, page, setPage }) {
   const [images, setImages] = useState([]);
-  const [page, setPage] = useState(1);
   const [totalHits, setTotalHits] = useState(null);
   const [url, setUrl] = useState('');
   const [alt, setAlt] = useState('');
@@ -27,46 +25,41 @@ export default function ImageGallery({ searchImg }) {
   const [error, setError] = useState(null);
   const [status, setStatus] = useState(Status.IDLE);
 
-  useEffect(
-    () => {
-      if (page > 1) {
-        fetch(
-          `https://pixabay.com/api/?q=${searchImg}&page=${page}&key=${API_KEY}&image_type=photo&orientation=horizontal&per_page=12`
-        )
-          .then(response => response.json())
-          .then(result => {
-            setImages(prev => [...prev, ...result.hits]);
-            setStatus(Status.RESOLVED);
-          })
+  useEffect(() => {
+    if (page > 1) {
+      Api.ImagesFetch(searchImg, page)
+        .then(result => {
+          setImages(prev => [...prev, ...result.hits]);
+          setStatus(Status.RESOLVED);
+        })
 
-          .catch(error => {
-            setStatus(Status.REJECTED);
-            setError(error.message);
-          });
-      }
-    },
-    // eslint-disable-next-line
-    [page]
-  );
+        .catch(error => {
+          setStatus(Status.REJECTED);
+          setError(error.message);
+        });
+    }
+  }, [page, searchImg]);
 
   useEffect(() => {
-    if (!searchImg) {
+    if (!searchImg || page !== 1) {
       return;
     }
     setStatus(Status.PENDING);
     setPage(1);
 
-    Api.ImagesFetch(searchImg)
-      .then(result => {
-        setImages(result.hits);
-        setTotalHits(result.total);
-        setStatus(Status.RESOLVED);
-      })
-      .catch(error => {
-        setStatus(Status.REJECTED);
-        setError(error.message);
-      });
-  }, [error, searchImg]);
+    if (page === 1) {
+      Api.ImagesFetch(searchImg, page)
+        .then(result => {
+          setImages(result.hits);
+          setTotalHits(result.total);
+          setStatus(Status.RESOLVED);
+        })
+        .catch(error => {
+          setStatus(Status.REJECTED);
+          setError(error.message);
+        });
+    }
+  }, [error, page, searchImg, setPage]);
 
   const onHandleClick = () => {
     return setPage(page + 1);
@@ -87,12 +80,7 @@ export default function ImageGallery({ searchImg }) {
   if (status === Status.IDLE) {
     return (
       <>
-        <IdleItem images={images} onClick={onImageClick} />
-        {modalOpen && (
-          <Modal onClose={toggleModal}>
-            <img src={url} alt={alt} />
-          </Modal>
-        )}
+        <IdleItem />
       </>
     );
   }
@@ -113,7 +101,7 @@ export default function ImageGallery({ searchImg }) {
         ) : null}
         {modalOpen && (
           <Modal onClose={toggleModal}>
-            <img src={url} alt="img" />
+            <img src={url} alt={alt} />
           </Modal>
         )}
       </>

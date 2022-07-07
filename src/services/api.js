@@ -1,8 +1,8 @@
 export const API_KEY = '27935706-58376e41d3c547772de5a9830';
 
-const ImagesFetch = query => {
+const ImagesFetch = (query, page) => {
   return fetch(
-    `https://pixabay.com/api/?q=${query}&page=1&key=${API_KEY}&image_type=photo&orientation=horizontal&per_page=12`
+    `https://pixabay.com/api/?q=${query}&page=${page}&key=${API_KEY}&image_type=photo&orientation=horizontal&per_page=12`
   ).then(response => {
     if (response.ok) {
       return response.json();
