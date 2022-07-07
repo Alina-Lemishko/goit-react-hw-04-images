@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import Button from 'components/Button/Button';
 import Modal from 'components/Modal/Modal';
@@ -10,131 +10,121 @@ import IdleItem from 'components/IdleItem/IdleItem';
 import Loader from 'components/Loader/Loader';
 import s from '../IdleItem/IdleItem.module.css';
 
-class ImageGallery extends Component {
-  static propTypes = {
-    searchImg: PropTypes.string.isRequired,
+const Status = {
+  IDLE: 'idle',
+  PENDING: 'pending',
+  RESOLVED: 'resolved',
+  REJECTED: 'rejected',
+};
+
+export default function ImageGallery({ searchImg }) {
+  const [images, setImages] = useState([]);
+  const [page, setPage] = useState(1);
+  const [totalHits, setTotalHits] = useState(null);
+  const [url, setUrl] = useState('');
+  const [alt, setAlt] = useState('');
+  const [modalOpen, setModalOpen] = useState(false);
+  const [error, setError] = useState(null);
+  const [status, setStatus] = useState(Status.IDLE);
+
+  useEffect(
+    () => {
+      if (page > 1) {
+        fetch(
+          `https://pixabay.com/api/?q=${searchImg}&page=${page}&key=${API_KEY}&image_type=photo&orientation=horizontal&per_page=12`
+        )
+          .then(response => response.json())
+          .then(result => {
+            setImages(prev => [...prev, ...result.hits]);
+            setStatus(Status.RESOLVED);
+          })
+
+          .catch(error => {
+            setStatus(Status.REJECTED);
+            setError(error.message);
+          });
+      }
+    },
+    // eslint-disable-next-line
+    [page]
+  );
+
+  useEffect(() => {
+    if (!searchImg) {
+      return;
+    }
+    setStatus(Status.PENDING);
+    setPage(1);
+
+    Api.ImagesFetch(searchImg)
+      .then(result => {
+        setImages(result.hits);
+        setTotalHits(result.total);
+        setStatus(Status.RESOLVED);
+      })
+      .catch(error => {
+        setStatus(Status.REJECTED);
+        setError(error.message);
+      });
+  }, [error, searchImg]);
+
+  const onHandleClick = () => {
+    return setPage(page + 1);
   };
 
-  state = {
-    images: [],
-    page: 1,
-    totalHits: null,
-    url: '',
-    alt: '',
-    modalOpen: false,
-    error: null,
-    status: 'idle',
+  const onImageClick = (url, tag) => {
+    setUrl(url);
+    setModalOpen(!modalOpen);
+    setAlt(tag);
   };
 
-  // componentDidMount() {
-  //   // Api.ImagesFetch('flo').then(result =>
-  //   //   this.setState({ images: result.hits })
-  //   // );
-  // }
+  const toggleModal = () => {
+    setModalOpen(!modalOpen);
+  };
 
-  componentDidUpdate(prevProps, prevState) {
-    const { page } = this.state;
-    const { searchImg } = this.props;
-    if (this.state.page > prevState.page) {
-      fetch(
-        `https://pixabay.com/api/?q=${searchImg}&page=${page}&key=${API_KEY}&image_type=photo&orientation=horizontal&per_page=12`
-      )
-        .then(response => response.json())
-        .then(result =>
-          this.setState(prevState => ({
-            images: [...prevState.images, ...result.hits],
-            status: 'resolved',
-          }))
-        )
-        .catch(error =>
-          this.setState({
-            error: error.message,
-          })
-        );
-    }
+  const isNextPage = Math.ceil(totalHits / page);
 
-    if (prevProps.searchImg !== searchImg) {
-      this.setState({ status: 'pending' });
-
-      Api.ImagesFetch(searchImg)
-        .then(result =>
-          this.setState({
-            images: result.hits,
-            totalHits: result.total,
-            status: 'resolved',
-            page: 1,
-          })
-        )
-        .catch(error =>
-          this.setState({
-            error: error.message,
-            status: 'rejected',
-          })
-        );
-    }
+  if (status === Status.IDLE) {
+    return (
+      <>
+        <IdleItem images={images} onClick={onImageClick} />
+        {modalOpen && (
+          <Modal onClose={toggleModal}>
+            <img src={url} alt={alt} />
+          </Modal>
+        )}
+      </>
+    );
   }
 
-  onHandleClick = () => {
-    return this.setState(prevState => ({ page: prevState.page + 1 }));
-  };
+  if (status === Status.PENDING) {
+    return <Loader />;
+  }
 
-  onImageClick = (url, tag) => {
-    this.setState(prevState => ({
-      url,
-      modalOpen: !prevState.modalOpen,
-      alt: tag,
-    }));
-  };
-
-  toggleModal = () => {
-    this.setState(({ modalOpen }) => ({ modalOpen: !modalOpen }));
-  };
-
-  render() {
-    const { status, error, images, modalOpen, totalHits, page, url, alt } =
-      this.state;
-    const isNextPage = Math.ceil(totalHits / page);
-
-    if (status === 'idle') {
-      return (
-        <>
-          <IdleItem images={images} onClick={this.onImageClick} />
-          {modalOpen && (
-            <Modal onClose={this.toggleModal}>
-              <img src={url} alt={alt} />
-            </Modal>
-          )}
-        </>
-      );
+  if (status === Status.RESOLVED) {
+    if (images.length === 0) {
+      return <h2 className={s.container}>Sorry, nothing was find</h2>;
     }
+    return (
+      <>
+        <ResolvedItem images={images} onClick={onImageClick} />
+        {totalHits > 12 && isNextPage > 12 ? (
+          <Button onClick={onHandleClick} />
+        ) : null}
+        {modalOpen && (
+          <Modal onClose={toggleModal}>
+            <img src={url} alt="img" />
+          </Modal>
+        )}
+      </>
+    );
+  }
 
-    if (status === 'pending') {
-      return <Loader />;
-    }
-
-    if (status === 'resolved') {
-      if (images.length === 0) {
-        return <h2 className={s.container}>Sorry, nothing was find</h2>;
-      }
-      return (
-        <>
-          <ResolvedItem images={images} onClick={this.onImageClick} />
-          {totalHits > 12 && isNextPage > 12 ? (
-            <Button onClick={this.onHandleClick} />
-          ) : null}
-          {modalOpen && (
-            <Modal onClose={this.toggleModal}>
-              <img src={url} alt="img" />
-            </Modal>
-          )}
-        </>
-      );
-    }
-
-    if (status === 'rejected') {
-      return <RejectedItem error={error.message} />;
-    }
+  if (status === Status.REJECTED) {
+    return <RejectedItem error={error.message} />;
   }
 }
 
-export default ImageGallery;
+ImageGallery.propTypes = {
+  searchImg: PropTypes.string.isRequired,
+};
